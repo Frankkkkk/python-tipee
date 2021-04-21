@@ -105,8 +105,13 @@ def parse_args(args=sys.argv[1:]):
 if __name__ == "__main__":
     args = parse_args()
 
-    t = Tipee(os.environ["TIPEE_URL"])
-    t.login(os.environ["TIPEE_USERNAME"], os.environ["TIPEE_PASSWORD"])
+    t = Tipee(os.getenv("TIPEE_URL", default="https://infomaniak.tipee.net/"))
+    username = os.getenv("TIPEE_USERNAME")
+    password = os.getenv("TIPEE_PASSWORD")
+    if username is None or password is None:
+        sys.exit("Please set TIPEE_USERNAME and TIPEE_PASSWORD environment variables")
+    t.login(username, password)
+
     today = datetime.datetime.now()
 
     if 'punch' in args:
