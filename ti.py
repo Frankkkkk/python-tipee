@@ -1,11 +1,22 @@
 #!/usr/bin/env python3
-# frank.villaro@infomaniak.com - DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE, etc.
+"""
+Python Tipee thingy
 
+Description:
+Display info about tipee timings
+frank.villaro@infomaniak.com - DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE, etc.
+"""
 import datetime
 import os
 import sys
+import argparse
 
 import requests
+
+class CustomFormatter(
+    argparse.RawDescriptionHelpFormatter, argparse.ArgumentDefaultsHelpFormatter
+):
+    pass
 
 
 def parse_time(str_time: str, default=None):
@@ -78,12 +89,27 @@ class Tipee:
         r.raise_for_status()
 
 
+def parse_args(args=sys.argv[1:]):
+    """Parse arguments."""
+    parser = argparse.ArgumentParser(
+        description=sys.modules[__name__].__doc__, formatter_class=CustomFormatter
+    )
+
+    subparsers = parser.add_subparsers(help='Punch your time')
+    parser_a = subparsers.add_parser('punch')
+    parser_a.add_argument('--punch', default=True)
+
+    return parser.parse_args(args)
+
+
 if __name__ == "__main__":
+    args = parse_args()
+
     t = Tipee(os.environ["TIPEE_URL"])
     t.login(os.environ["TIPEE_USERNAME"], os.environ["TIPEE_PASSWORD"])
     today = datetime.datetime.now()
 
-    if len(sys.argv) > 1 and sys.argv[1] == "punch":
+    if 'punch' in args:
         t.punch()
         print("The clock has been punched ! 🤜⏰")
 
