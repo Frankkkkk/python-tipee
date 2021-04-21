@@ -62,6 +62,12 @@ class Tipee:
 
         return total_working_time
 
+    def get_birthdays(self):
+        url = self.instance + "brain/persons/employee/birthday"
+        r = self.session.get(url)
+        r.raise_for_status()
+        return r.json()
+
     def punch(self):
         url = self.instance + "brain/timeclock/timechecks"
         payload = {
@@ -81,7 +87,7 @@ if __name__ == "__main__":
         t.punch()
         print("The clock has been punched ! 🤜⏰")
 
-    print(f'TODAY {today.strftime("%Y-%m-%d")}\n----------------\ntimes: ', end="")
+    print(f'📅 TODAY {today.strftime("%Y-%m-%d")}\n-------------------\ntimes: ', end="")
     for timecheck in t.get_timechecks(today):
         for field in ["time_in", "time_out"]:
             dt = parse_time(timecheck[field], None)
@@ -89,5 +95,8 @@ if __name__ == "__main__":
                 print(f'{dt.strftime("%H:%M")} ', end="")
     print(f"\ntotal worktime: {t.get_worktime(today)}")
 
+    birthdays = [bd["first_name"] + " " + bd["last_name"] for bd in t.get_birthdays()]
+    if len(birthdays) > 0:
+        print(f'🎂 birthdays: {",".join(birthdays)}')
 
 # vim: set ts=4 sw=4 et:
