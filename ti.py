@@ -66,7 +66,7 @@ class Tipee:
         url = self.instance + "brain/persons/employee/birthday"
         r = self.session.get(url)
         r.raise_for_status()
-        return r.json()
+        return (r.status_code == 200 and r.json()) or []
 
     def punch(self):
         url = self.instance + "brain/timeclock/timechecks"
