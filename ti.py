@@ -93,10 +93,9 @@ if __name__ == "__main__":
             dt = parse_time(timecheck[field], None)
             if dt is not None:
                 print(f'{dt.strftime("%H:%M")} ', end="")
-    worktime = t.get_worktime(today).total_seconds()
-    worktime_hours = worktime / 60 // 60
-    worktime_minutes = worktime / 60 % 60
-    print(f"\ntotal worktime today so far: {worktime_hours:.0f}h{worktime_minutes:02.0f}m")
+    worktime = t.get_worktime(today).total_seconds() // 60
+    missing = 8 * 60 - worktime
+    print(f"\ntotal worktime today so far: {worktime // 60:.0f}h{worktime % 60:02.0f}m ({missing // 60:.0f}h{missing % 60:02.0f}m left)")
 
     birthdays = [bd["first_name"] + " " + bd["last_name"] for bd in t.get_birthdays()]
     if len(birthdays) > 0:

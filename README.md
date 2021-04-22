@@ -2,7 +2,7 @@
 ## Usage
 ```
 $ ./ti.py
-TODAY total worktime: 0:14:54.562476
+total worktime today so far: 6h06m (1h54m left)
 ```
 
 ## Punch your time
@@ -12,7 +12,7 @@ The clock has been punched ! 🤜⏰
 📅 TODAY 2021-04-21
 -------------------
 times: 09:37 12:28 13:24 
-total worktime: 2:51:35.647840
+total worktime today so far: 6h06m (1h54m left)
 🎂 birthdays: Alice Bobber
 ```
 
