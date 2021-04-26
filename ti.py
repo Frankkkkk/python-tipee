@@ -61,6 +61,20 @@ class Tipee:
         js = r.json()
         return js.get("timechecks", [])
 
+    def get_balances(self, day=None):
+        if not day:
+            day = datetime.datetime.today() - datetime.timedelta(days=1)
+
+        str_day = day.strftime("%Y-%m-%d")
+
+        url = self.instance + f"brain/plannings/soldes?day_end={str_day}"
+        
+        r = self.session.get(url)
+        r.raise_for_status()
+
+        js = r.json()
+        return js
+
     def get_worktime(self, day=None):
         total_working_time = datetime.timedelta()
 
@@ -127,6 +141,10 @@ if __name__ == "__main__":
     worktime = t.get_worktime(today).total_seconds() // 60
     missing = 8 * 60 - worktime
     print(f"\ntotal worktime today so far: {worktime // 60:.0f}h{worktime % 60:02.0f}m ({missing // 60:.0f}h{missing % 60:02.0f}m left)")
+
+    balances = t.get_balances()
+    print(f"\nbalance of hours before today: {balances['hours']['total']}h")
+    print(f"balance of holidays before today: {balances['holidays']['remaining']}j")
 
     birthdays = [bd["first_name"] + " " + bd["last_name"] for bd in t.get_birthdays()]
     if len(birthdays) > 0:
