@@ -13,6 +13,10 @@ The clock has been punched ! 🤜⏰
 -------------------
 times: 09:37 12:28 13:24 
 total worktime today so far: 6h06m (1h54m left)
+
+balance of hours before today: 13h37m
+balance of holidays before today: 20j
+
 🎂 birthdays: Alice Bobber
 ```
 
