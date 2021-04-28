@@ -140,14 +140,18 @@ if __name__ == "__main__":
                 print(f'{dt.strftime("%H:%M")} ', end="")
     worktime = t.get_worktime(today).total_seconds() // 60
     missing = 8 * 60 - worktime
-    print(f"\ntotal worktime today so far: {worktime // 60:.0f}h{worktime % 60:02.0f}m ({missing // 60:.0f}h{missing % 60:02.0f}m left)")
+    if missing < 0:
+        missing = abs(missing)
+        print(f"\ntotal worktime today so far: {worktime // 60:.0f}h{worktime % 60:02.0f}m ({missing // 60:.0f}h{missing % 60:02.0f}m over ⌛)")
+    else:
+        print(f"\ntotal worktime today so far: {worktime // 60:.0f}h{worktime % 60:02.0f}m ({missing // 60:.0f}h{missing % 60:02.0f}m left ⏳)")
 
     balances = t.get_balances()
-    print(f"\nbalance of hours before today: {balances['hours']['total']}h")
+    print(f"\nbalance of hours before today: {int(balances['hours']['total'])}h{balances['hours']['total'] % 1 * 60:02.0f}m")
     print(f"balance of holidays before today: {balances['holidays']['remaining']}j")
 
     birthdays = [bd["first_name"] + " " + bd["last_name"] for bd in t.get_birthdays()]
     if len(birthdays) > 0:
-        print(f'🎂 birthdays: {",".join(birthdays)}')
+        print(f'\n🎂 birthdays: {",".join(birthdays)}')
 
 # vim: set ts=4 sw=4 et:
