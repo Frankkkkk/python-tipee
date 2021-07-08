@@ -2,25 +2,25 @@
 ## Usage
 ```
 $ ./ti.py
-📅 TODAY 2021-04-21
+📅 TODAY 2021-07-07
 -------------------
-times: 09:37 12:28 13:24 
-total worktime today so far: 6h06m (1h54m left ⏳)
-🚪You may leave at 16:01
+times: 08:54 
+total worktime today so far: 2h55m (5h05m left ⏳)
+End of the day at: 17h24m 🏃💨
 
-balance of hours before today: 13h37m
-balance of holidays before today: 20j
+balance of hours before today: 19h56m
+balance of holidays before today: 9.82j
 
 🎂 birthdays: Alice Bobber
 ```
 
-You can remove the "you may leave after" message with option `--no-departure`
+ℹ️ You can remove the "you may leave after" message with option `--no-departure`. The End of day add 30mins if you don't do your break.
 
 ## Punch your time
 ```
-./ti.py punch
+./ti.py --punch
 The clock has been punched ! 🤜⏰
-📅 TODAY 2021-04-21
+📅 TODAY 2021-07-07
 -------------------
 (...)
 ```

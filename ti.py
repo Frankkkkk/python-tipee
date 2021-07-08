@@ -68,7 +68,7 @@ class Tipee:
         str_day = day.strftime("%Y-%m-%d")
 
         url = self.instance + f"brain/plannings/soldes?day_end={str_day}"
-        
+
         r = self.session.get(url)
         r.raise_for_status()
 
@@ -80,8 +80,9 @@ class Tipee:
 
         for timecheck in self.get_timechecks(day):
             time_in = parse_time(timecheck["time_in"])
-            time_out = parse_time(timecheck["time_out"], datetime.datetime.now())
-
+            time_out = parse_time(timecheck["time_out"] , datetime.datetime.now())
+            if timecheck["time_out"] == None:
+                time_out = parse_time(timecheck["proposal_out"], datetime.datetime.now())
             delta = time_out - time_in
             total_working_time += delta
 
@@ -123,7 +124,7 @@ if __name__ == "__main__":
     t = Tipee(os.getenv("TIPEE_URL", default="https://infomaniak.tipee.net/"))
     username = os.getenv("TIPEE_USERNAME")
     password = os.getenv("TIPEE_PASSWORD")
-    if username is None or password is None:
+    if username == None or password == None or username == '' or password == '':
         sys.exit("Please set TIPEE_USERNAME and TIPEE_PASSWORD environment variables")
     t.login(username, password)
 
@@ -135,22 +136,55 @@ if __name__ == "__main__":
 
     print(f'📅 TODAY {today.strftime("%Y-%m-%d")}\n-------------------\ntimes: ', end="")
     for timecheck in t.get_timechecks(today):
-        for field in ["time_in", "time_out"]:
+        for field in ["time_in", "time_out", "proposal_out"]:
             dt = parse_time(timecheck[field], None)
-            if dt is not None:
-                print(f'{dt.strftime("%H:%M")} ', end="")
+            if dt == None:
+                pass
+            elif field in ["proposal_out"]:
+                print(f'\033[93m{dt.strftime("%H:%M")}\033[0m ', end="")
+            elif dt is not None:
+                print(f'\033[92m{dt.strftime("%H:%M")}\033[0m ', end="")
     worktime = t.get_worktime(today).total_seconds() // 60
     missing = 8 * 60 - worktime
     if missing < 0:
         missing = abs(missing)
-        print(f"\ntotal worktime today so far: {worktime // 60:.0f}h{worktime % 60:02.0f}m ({missing // 60:.0f}h{missing % 60:02.0f}m over ⌛)")
+        print(f"\ntotal worktime today so far: \033[1m{worktime // 60:.0f}h{worktime % 60:02.0f}m\033[0m ({missing // 60:.0f}h{missing % 60:02.0f}m over ⌛)")
     else:
-        print(f"\ntotal worktime today so far: {worktime // 60:.0f}h{worktime % 60:02.0f}m ({missing // 60:.0f}h{missing % 60:02.0f}m left ⏳)")
+        print(f"\ntotal worktime today so far: \033[1m{worktime // 60:.0f}h{worktime % 60:02.0f}m\033[0m ({missing // 60:.0f}h{missing % 60:02.0f}m left ⏳)")
 
-        if args.show_departure:
-            # calculate time of departure
-            departure_time = today + datetime.timedelta(minutes=missing)
-            print(f"🚪You may leave at {departure_time.strftime('%H:%M')}")
+    if args.show_departure:
+        # We take the second time_in and the first time_out
+        nb_time_in = 0
+        first_time_out = 0
+        for timecheck in t.get_timechecks(today):
+            time_in = parse_time(timecheck["time_in"])
+            time_out = parse_time(timecheck["time_out"], datetime.datetime.now())
+            nb_time_in += 1
+
+            # we take the time_out as an int to calculate it
+            if timecheck["time_out"] != None:
+                first_time_out = 10000*datetime.datetime.strptime(timecheck["time_out"], "%Y-%m-%d %H:%M:%S").hour + 100*datetime.datetime.strptime(timecheck["time_out"], "%Y-%m-%d %H:%M:%S").minute
+        # we take the time_in as an int to calculate it
+        second_time_in = 10000*datetime.datetime.strptime(timecheck["time_in"], "%Y-%m-%d %H:%M:%S").hour + 100*datetime.datetime.strptime(timecheck["time_in"], "%Y-%m-%d %H:%M:%S").minute
+        # we remove 30mins if we did not make the break
+        if nb_time_in == 1:
+            missing += 30
+        elif nb_time_in == 2:
+            diff = (second_time_in - first_time_out) / 100
+            if diff >= 30:
+                pass
+            elif diff < 30:
+                diff_pause = 30 - diff
+                missing += diff_pause
+
+        current_time = datetime.datetime.now()
+        time_end_day = str(current_time + datetime.timedelta(minutes=missing))
+        hour_end_day = "{:%Hh%Mm}".format(datetime.datetime.strptime(time_end_day, "%Y-%m-%d %H:%M:%S.%f"))
+        if (worktime / 60) < 8:
+            print(f"End of the day at: \033[1m{hour_end_day}\033[0m 🏃💨")
+        else:
+            print(f"End of the day at: \033[1mNOW GO GO GO\033[0m 🏃💨")
+
 
     balances = t.get_balances()
     print(f"\nbalance of hours before today: {int(balances['hours']['total'])}h{balances['hours']['total'] % 1 * 60:02.0f}m")
