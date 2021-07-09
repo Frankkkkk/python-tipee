@@ -47,6 +47,9 @@ class Tipee:
         url = self.instance + "brain/users/me"
         r = self.session.get(url)
         self.id = r.json()["id"]
+        address_user = r.json()["address"]
+        city_user = r.json()["city"]
+        return address_user, city_user
 
     def get_timechecks(self, day=None):
         if not day:
@@ -103,6 +106,12 @@ class Tipee:
         r = self.session.post(url, json=payload)
         r.raise_for_status()
 
+def get_weather():
+    address_user, city_name = t._get_me()
+    url_weater = f"http://wttr.in/{city_name}?0"
+    response = requests.get(url_weater)        # To execute get request
+    response_text = '\n' + response.text     # To print formatted JSON response
+    return response_text
 
 def parse_args(args=sys.argv[1:]):
     """Parse arguments."""
@@ -112,6 +121,7 @@ def parse_args(args=sys.argv[1:]):
 
     parser.add_argument('-p', '--punch', action='store_true', help="punch your time on Tipee")
     parser.add_argument('-d', '--no-departure', dest="no_departure", action='store_true', help="don't show you what time you can leave")
+    parser.add_argument('-w', '--weather', action='store_true', help="show the current weather")
 
     args = parser.parse_args()
     return args
@@ -192,5 +202,9 @@ if __name__ == "__main__":
     birthdays = [bd["first_name"] + " " + bd["last_name"] for bd in t.get_birthdays()]
     if len(birthdays) > 0:
         print(f'\n🎂 birthdays: {",".join(birthdays)}')
+
+    # Weather
+    if args.weather:
+        print(get_weather())
 
 # vim: set ts=4 sw=4 et:

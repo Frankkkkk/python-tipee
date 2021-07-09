@@ -25,6 +25,20 @@ The clock has been punched ! 🤜⏰
 (...)
 ```
 
+## Get the weather of your city
+We show you the current weather at home.
+```
+./ti.py --weather
+(...)
+Weather report: geneva
+
+   _`/"".-.     Light rain shower, thunderstorm in vicinity, rain with thunderstorm
+    ,\_(   ).   19 °C
+     /(___(__)  ↑ 15 km/h
+       ‘ ‘ ‘ ‘  10 km
+      ‘ ‘ ‘ ‘   0.0 mm
+(...)
+```
 
 ## Dependencies
 You need the following env variables set:
