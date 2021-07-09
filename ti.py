@@ -110,12 +110,11 @@ def parse_args(args=sys.argv[1:]):
         description=sys.modules[__name__].__doc__, formatter_class=CustomFormatter
     )
 
-    parser.add_argument("--no-departure", dest="show_departure", action="store_false", help="Dont show suggested departure time")
-    subparsers = parser.add_subparsers(help='Punch your time')
-    parser_a = subparsers.add_parser('punch')
-    parser_a.add_argument('--punch', default=True)
+    parser.add_argument('-p', '--punch', action='store_true', help="punch your time on Tipee")
+    parser.add_argument('-d', '--no-departure', dest="no_departure", action='store_true', help="don't show you what time you can leave")
 
-    return parser.parse_args(args)
+    args = parser.parse_args()
+    return args
 
 
 if __name__ == "__main__":
@@ -130,7 +129,7 @@ if __name__ == "__main__":
 
     today = datetime.datetime.now()
 
-    if 'punch' in args:
+    if args.punch:
         t.punch()
         print("The clock has been punched ! 🤜⏰")
 
@@ -152,7 +151,7 @@ if __name__ == "__main__":
     else:
         print(f"\ntotal worktime today so far: \033[1m{worktime // 60:.0f}h{worktime % 60:02.0f}m\033[0m ({missing // 60:.0f}h{missing % 60:02.0f}m left ⏳)")
 
-    if args.show_departure:
+    if not args.no_departure:
         # We take the second time_in and the first time_out
         nb_time_in = 0
         first_time_out = 0
