@@ -156,26 +156,28 @@ if __name__ == "__main__":
         # We take the second time_in and the first time_out
         nb_time_in = 0
         first_time_out = 0
+        timecheck = None
         for timecheck in t.get_timechecks(today):
             time_in = parse_time(timecheck["time_in"])
             time_out = parse_time(timecheck["time_out"], datetime.datetime.now())
             nb_time_in += 1
 
             # we take the time_out as an int to calculate it
-            if timecheck["time_out"] != None:
+            if timecheck["time_out"] != None and first_time_out == 0:
                 first_time_out = 10000*datetime.datetime.strptime(timecheck["time_out"], "%Y-%m-%d %H:%M:%S").hour + 100*datetime.datetime.strptime(timecheck["time_out"], "%Y-%m-%d %H:%M:%S").minute
-        # we take the time_in as an int to calculate it
-        second_time_in = 10000*datetime.datetime.strptime(timecheck["time_in"], "%Y-%m-%d %H:%M:%S").hour + 100*datetime.datetime.strptime(timecheck["time_in"], "%Y-%m-%d %H:%M:%S").minute
-        # we remove 30mins if we did not make the break
-        if nb_time_in == 1:
-            missing += 30
-        elif nb_time_in == 2:
-            diff = (second_time_in - first_time_out) / 100
-            if diff >= 30:
-                pass
-            elif diff < 30:
-                diff_pause = 30 - diff
-                missing += diff_pause
+        if timecheck is not None:
+            # we take the time_in as an int to calculate it
+            second_time_in = 10000*datetime.datetime.strptime(timecheck["time_in"], "%Y-%m-%d %H:%M:%S").hour + 100*datetime.datetime.strptime(timecheck["time_in"], "%Y-%m-%d %H:%M:%S").minute
+            # we remove 30mins if we did not make the break
+            if nb_time_in == 1:
+                missing += 30
+            elif nb_time_in == 2:
+                diff = (second_time_in - first_time_out) / 100
+                if diff >= 30:
+                    pass
+                elif diff < 30:
+                    diff_pause = 30 - diff
+                    missing += diff_pause
 
         current_time = datetime.datetime.now()
         time_end_day = str(current_time + datetime.timedelta(minutes=missing))
