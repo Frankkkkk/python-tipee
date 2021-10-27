@@ -84,7 +84,9 @@ class Tipee:
         for timecheck in self.get_timechecks(day):
             time_in = parse_time(timecheck["time_in"])
             time_out = parse_time(timecheck["time_out"] , datetime.datetime.now())
-            if timecheck["time_out"] == None:
+            if timecheck["time_in"] == None:
+                time_in = parse_time(timecheck["proposal_in"])
+            elif timecheck["time_out"] == None:
                 time_out = parse_time(timecheck["proposal_out"], datetime.datetime.now())
             delta = time_out - time_in
             total_working_time += delta
@@ -202,11 +204,11 @@ if __name__ == "__main__":
 
     print(f'📅 TODAY {today.strftime("%Y-%m-%d")}\n-------------------\ntimes: ', end="")
     for timecheck in t.get_timechecks(today):
-        for field in ["time_in", "time_out", "proposal_out"]:
+        for field in ["time_in", "time_out", "proposal_in", "proposal_out"]:
             dt = parse_time(timecheck[field], None)
             if dt == None:
                 pass
-            elif field in ["proposal_out"]:
+            elif field in ["proposal_out"] or field in ["proposal_in"]:
                 print(f'\033[93m{dt.strftime("%H:%M")}\033[0m ', end="")
             elif dt is not None:
                 print(f'\033[92m{dt.strftime("%H:%M")}\033[0m ', end="")
@@ -225,13 +227,17 @@ if __name__ == "__main__":
         for timecheck in t.get_timechecks(today):
             time_in = parse_time(timecheck["time_in"])
             time_out = parse_time(timecheck["time_out"], datetime.datetime.now())
+            if timecheck["time_in"] == None:
+                time_in = parse_time(timecheck["proposal_in"])
+            elif timecheck["time_out"] == None:
+                time_out = parse_time(timecheck["proposal_out"], datetime.datetime.now())
             nb_time_in += 1
 
             # we take the time_out as an int to calculate it
             if timecheck["time_out"] != None:
-                first_time_out = 10000*datetime.datetime.strptime(timecheck["time_out"], "%Y-%m-%d %H:%M:%S").hour + 100*datetime.datetime.strptime(timecheck["time_out"], "%Y-%m-%d %H:%M:%S").minute
+                first_time_out = 10000*datetime.datetime.strptime(str(time_out), "%Y-%m-%d %H:%M:%S").hour + 100*datetime.datetime.strptime(str(time_out), "%Y-%m-%d %H:%M:%S").minute
         # we take the time_in as an int to calculate it
-        second_time_in = 10000*datetime.datetime.strptime(timecheck["time_in"], "%Y-%m-%d %H:%M:%S").hour + 100*datetime.datetime.strptime(timecheck["time_in"], "%Y-%m-%d %H:%M:%S").minute
+        second_time_in = 10000*datetime.datetime.strptime(str(time_in), "%Y-%m-%d %H:%M:%S").hour + 100*datetime.datetime.strptime(str(time_in), "%Y-%m-%d %H:%M:%S").minute
         # we remove 30mins if we did not make the break
         if nb_time_in == 1:
             missing += 30
