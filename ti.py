@@ -75,7 +75,7 @@ class Tipee:
         js = r.json()
         return js
 
-    def get_worktime(self, day=None):
+    def get_worktime(self, day=None) -> datetime.timedelta:
         total_working_time = datetime.timedelta()
 
         for timecheck in self.get_timechecks(day):
