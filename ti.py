@@ -189,7 +189,14 @@ if __name__ == "__main__":
 
 
     balances = t.get_balances()
-    print(f"\nbalance of hours before today: {int(balances['hours']['total'])}h{balances['hours']['total'] % 1 * 60:02.0f}m")
+    hours_balance = datetime.timedelta(hours=balances['hours']['total'])
+    print(f"\nbalance of hours before today: {balances['hours']['total']:.1f}h", end="")
+    if abs(hours_balance) > datetime.timedelta(hours=10):
+        one_day = datetime.timedelta(hours=8)
+        print(f" ({hours_balance/one_day:.2} 8-hour days)")
+    else:
+        print()
+
     print(f"balance of holidays before today: {balances['holidays']['remaining']}j")
 
     birthdays = [bd["first_name"] + " " + bd["last_name"] for bd in t.get_birthdays()]
