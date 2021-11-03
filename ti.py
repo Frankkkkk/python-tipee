@@ -110,7 +110,7 @@ def parse_args(args=sys.argv[1:]):
         description=sys.modules[__name__].__doc__, formatter_class=CustomFormatter
     )
 
-    parser.add_argument("--no-departure", dest="show_departure", action="store_false", help="Dont show suggested departure time")
+    parser.add_argument("--no-departure", dest="show_departure", action="store_false", help="Don't show suggested departure time")
     subparsers = parser.add_subparsers(help='Punch your time')
     parser_a = subparsers.add_parser('punch')
     parser_a.add_argument('--punch', default=True)
