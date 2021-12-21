@@ -6,6 +6,7 @@ Description:
 Display info about tipee timings
 frank.villaro@infomaniak.com - DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE, etc.
 """
+from dotenv import load_dotenv
 import datetime
 import os
 import sys
@@ -188,6 +189,8 @@ def parse_args(args=sys.argv[1:]):
 
 if __name__ == "__main__":
     args = parse_args()
+    # load the environement variable in .env file
+    load_dotenv()
 
     t = Tipee(os.getenv("TIPEE_URL", default="https://infomaniak.tipee.net/"))
     username = os.getenv("TIPEE_USERNAME")
