@@ -1,6 +1,18 @@
 # Python Tipee thingy
 
-## Installation - for route in public transport
+## Installation
+
+### python-dotenv
+
+This script also uses the lib `python-dotenv` to load environment variables from the `.env` file.
+
+This installation is not mandatory but you should put your environment variables in a root configuration file like `.bashrc` or `.zshrc`.
+
+So please install it too if you want use `.env` file:
+```
+$ pip install python-dotenv
+```
+More information about python-dotenv [here](https://pypi.org/project/python-dotenv/)
 ### ⚠️ Not mandatory for the proper functioning of the script without journey.
 This script Tipee use the library `Tabulate` for create the table of routes in public transport. So if you want to have this route, please install it. (More information about tabulate [here](https://github.com/astanin/python-tabulate))
 ```
@@ -79,3 +91,7 @@ You need the following env variables set:
 - TIPEE_USERNAME (foo-bar)
 - TIPEE_PASSWORD (secretz)
 - TIPEE_FROM (City, street)
+
+You can put them in the `.env` file (renaming the `.env.example`).
+
+Or put them in a root configuration file like `.bashrc` or `.zshrc`.
