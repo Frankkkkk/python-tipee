@@ -13,7 +13,8 @@ So please install it too if you want use `.env` file:
 $ pip install python-dotenv
 ```
 More information about python-dotenv [here](https://pypi.org/project/python-dotenv/)
-### ⚠️ Not mandatory for the proper functioning of the script without journey.
+### python-dotenv
+#### ⚠️ Not mandatory for the proper functioning of the script without journey.
 This script Tipee use the library `Tabulate` for create the table of routes in public transport. So if you want to have this route, please install it. (More information about tabulate [here](https://github.com/astanin/python-tabulate))
 ```
 pip install tabulate
