@@ -31,22 +31,27 @@ class Tipee:
             instance += "/"
         self.instance = instance
         self.session = requests.Session()
+        self._cache = {}
+
+    def _request(self, url, payload=None):
+        if url in self._cache:
+            return self._cache[url]
+
+        if payload:
+            r = self.session.post(self.instance + url, json=payload)
+        else:
+            r = self.session.get(self.instance + url)
+        r.raise_for_status()
+        if r.text.strip():  # tipee likes to reply with a single empty line
+            self._cache[url] = r.json()
+            return self._cache[url]
 
     def login(self, username: str, password: str):
-        url = self.instance + "api/sign-in"
-        payload = {
+        self._request("api/sign-in", payload = {
             "username": username,
             "password": password,
-        }
-        r = self.session.post(url, json=payload)
-        r.raise_for_status()
-
-        self._get_me()
-
-    def _get_me(self):
-        url = self.instance + "brain/users/me"
-        r = self.session.get(url)
-        self.id = r.json()["id"]
+        })
+        self.id = self._request("brain/users/me")["id"]
 
     def get_timechecks(self, day=None):
         if not day:
@@ -54,12 +59,9 @@ class Tipee:
 
         str_day = day.strftime("%Y-%m-%d")
 
-        url = self.instance + f"api/employees/{self.id}/workday?date={str_day}"
-        r = self.session.get(url)
-        r.raise_for_status()
+        data = self._request(f"api/employees/{self.id}/workday?date={str_day}")
 
-        js = r.json()
-        for timecheck in js.get("timechecks", []):
+        for timecheck in data.get("timechecks", []):
             timecheck["in"] = parse_time(timecheck["proposal_in"] or timecheck["time_in"])
             timecheck["out"] = parse_time(timecheck["proposal_out"] or timecheck["time_out"])
             yield timecheck
@@ -70,13 +72,7 @@ class Tipee:
 
         str_day = day.strftime("%Y-%m-%d")
 
-        url = self.instance + f"brain/plannings/soldes?day_end={str_day}"
-
-        r = self.session.get(url)
-        r.raise_for_status()
-
-        js = r.json()
-        return js
+        return self._request(f"brain/plannings/soldes?day_end={str_day}")
 
     def get_worktime(self, day=None) -> datetime.timedelta:
         total_working_time = datetime.timedelta()
@@ -89,19 +85,14 @@ class Tipee:
         return total_working_time
 
     def get_birthdays(self):
-        url = self.instance + "brain/persons/employee/birthday"
-        r = self.session.get(url)
-        r.raise_for_status()
-        return (r.status_code == 200 and r.json()) or []
+        data = self._request("brain/persons/employee/birthday")
+        return data or []
 
     def punch(self):
-        url = self.instance + "brain/timeclock/timechecks"
-        payload = {
-            "person": self.id,
-            "timeclock": "Linux",
-        }
-        r = self.session.post(url, json=payload)
-        r.raise_for_status()
+        self._request("brain/timeclock/timechecks", payload = {
+                "person": self.id,
+                "timeclock": "Linux",
+            })
 
 
 def parse_args(args=sys.argv[1:]):
