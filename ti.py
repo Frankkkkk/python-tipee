@@ -59,7 +59,10 @@ class Tipee:
         r.raise_for_status()
 
         js = r.json()
-        return js.get("timechecks", [])
+        for timecheck in js.get("timechecks", []):
+            timecheck["in"] = parse_time(timecheck["proposal_in"] or timecheck["time_in"])
+            timecheck["out"] = parse_time(timecheck["proposal_out"] or timecheck["time_out"])
+            yield timecheck
 
     def get_balances(self, day=None):
         if not day:
@@ -79,11 +82,8 @@ class Tipee:
         total_working_time = datetime.timedelta()
 
         for timecheck in self.get_timechecks(day):
-            time_in = parse_time(timecheck["time_in"])
-            time_out = parse_time(timecheck["time_out"] , datetime.datetime.now())
-            if timecheck["time_out"] == None:
-                time_out = parse_time(timecheck["proposal_out"], datetime.datetime.now())
-            delta = time_out - time_in
+            out = timecheck["out"] or datetime.datetime.today()
+            delta = out - timecheck["in"]
             total_working_time += delta
 
         return total_working_time
@@ -136,14 +136,23 @@ if __name__ == "__main__":
 
     print(f'📅 TODAY {today.strftime("%Y-%m-%d")}\n-------------------\ntimes: ', end="")
     for timecheck in t.get_timechecks(today):
-        for field in ["time_in", "time_out", "proposal_out"]:
-            dt = parse_time(timecheck[field], None)
-            if dt == None:
-                pass
-            elif field in ["proposal_out"]:
-                print(f'\033[93m{dt.strftime("%H:%M")}\033[0m ', end="")
-            elif dt is not None:
-                print(f'\033[92m{dt.strftime("%H:%M")}\033[0m ', end="")
+        if timecheck["proposal_in"]:
+            print(f"\033[93m", end="")
+        else:
+            print(f"\033[92m", end="")
+        print(timecheck["in"].strftime("%H:%M"), end="")
+        print("\033[0m-", end="")
+
+        if timecheck["out"]:
+            if timecheck["proposal_out"]:
+                print(f"\033[93m", end="")
+            else:
+                print(f"\033[92m", end="")
+            print(timecheck["out"].strftime("%H:%M"), end="")
+            print("\033[0m", end="")
+        else:
+            print("…", end="")
+
     worktime = t.get_worktime(today).total_seconds() // 60
     missing = 8 * 60 - worktime
     if missing < 0:
@@ -158,16 +167,16 @@ if __name__ == "__main__":
         first_time_out = 0
         timecheck = None
         for timecheck in t.get_timechecks(today):
-            time_in = parse_time(timecheck["time_in"])
-            time_out = parse_time(timecheck["time_out"], datetime.datetime.now())
+            time_in = timecheck["in"]
+            time_out = timecheck["out"] or datetime.datetime.now()
             nb_time_in += 1
 
             # we take the time_out as an int to calculate it
             if timecheck["time_out"] != None and first_time_out == 0:
-                first_time_out = 10000*datetime.datetime.strptime(timecheck["time_out"], "%Y-%m-%d %H:%M:%S").hour + 100*datetime.datetime.strptime(timecheck["time_out"], "%Y-%m-%d %H:%M:%S").minute
+                first_time_out = 10000*timecheck["out"].hour + 100*timecheck["out"].minute
         if timecheck is not None:
             # we take the time_in as an int to calculate it
-            second_time_in = 10000*datetime.datetime.strptime(timecheck["time_in"], "%Y-%m-%d %H:%M:%S").hour + 100*datetime.datetime.strptime(timecheck["time_in"], "%Y-%m-%d %H:%M:%S").minute
+            second_time_in = 10000*timecheck["in"].hour + 100*timecheck["in"].minute
             # we remove 30mins if we did not make the break
             if nb_time_in == 1:
                 missing += 30
