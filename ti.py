@@ -31,22 +31,27 @@ class Tipee:
             instance += "/"
         self.instance = instance
         self.session = requests.Session()
+        self._cache = {}
+
+    def _request(self, url, payload=None):
+        if url in self._cache:
+            return self._cache[url]
+
+        if payload:
+            r = self.session.post(self.instance + url, json=payload)
+        else:
+            r = self.session.get(self.instance + url)
+        r.raise_for_status()
+        if r.text.strip():  # tipee likes to reply with a single empty line
+            self._cache[url] = r.json()
+            return self._cache[url]
 
     def login(self, username: str, password: str):
-        url = self.instance + "api/sign-in"
-        payload = {
+        self._request("api/sign-in", payload = {
             "username": username,
             "password": password,
-        }
-        r = self.session.post(url, json=payload)
-        r.raise_for_status()
-
-        self._get_me()
-
-    def _get_me(self):
-        url = self.instance + "brain/users/me"
-        r = self.session.get(url)
-        self.id = r.json()["id"]
+        })
+        self.id = self._request("brain/users/me")["id"]
 
     def get_timechecks(self, day=None):
         if not day:
@@ -54,12 +59,12 @@ class Tipee:
 
         str_day = day.strftime("%Y-%m-%d")
 
-        url = self.instance + f"api/employees/{self.id}/workday?date={str_day}"
-        r = self.session.get(url)
-        r.raise_for_status()
+        data = self._request(f"api/employees/{self.id}/workday?date={str_day}")
 
-        js = r.json()
-        return js.get("timechecks", [])
+        for timecheck in data.get("timechecks", []):
+            timecheck["in"] = parse_time(timecheck["proposal_in"] or timecheck["time_in"])
+            timecheck["out"] = parse_time(timecheck["proposal_out"] or timecheck["time_out"])
+            yield timecheck
 
     def get_balances(self, day=None):
         if not day:
@@ -67,41 +72,27 @@ class Tipee:
 
         str_day = day.strftime("%Y-%m-%d")
 
-        url = self.instance + f"brain/plannings/soldes?day_end={str_day}"
-
-        r = self.session.get(url)
-        r.raise_for_status()
-
-        js = r.json()
-        return js
+        return self._request(f"brain/plannings/soldes?day_end={str_day}")
 
     def get_worktime(self, day=None) -> datetime.timedelta:
         total_working_time = datetime.timedelta()
 
         for timecheck in self.get_timechecks(day):
-            time_in = parse_time(timecheck["time_in"])
-            time_out = parse_time(timecheck["time_out"] , datetime.datetime.now())
-            if timecheck["time_out"] == None:
-                time_out = parse_time(timecheck["proposal_out"], datetime.datetime.now())
-            delta = time_out - time_in
+            out = timecheck["out"] or datetime.datetime.today()
+            delta = out - timecheck["in"]
             total_working_time += delta
 
         return total_working_time
 
     def get_birthdays(self):
-        url = self.instance + "brain/persons/employee/birthday"
-        r = self.session.get(url)
-        r.raise_for_status()
-        return (r.status_code == 200 and r.json()) or []
+        data = self._request("brain/persons/employee/birthday")
+        return data or []
 
     def punch(self):
-        url = self.instance + "brain/timeclock/timechecks"
-        payload = {
-            "person": self.id,
-            "timeclock": "Linux",
-        }
-        r = self.session.post(url, json=payload)
-        r.raise_for_status()
+        self._request("brain/timeclock/timechecks", payload = {
+                "person": self.id,
+                "timeclock": "Linux",
+            })
 
 
 def parse_args(args=sys.argv[1:]):
@@ -136,14 +127,23 @@ if __name__ == "__main__":
 
     print(f'📅 TODAY {today.strftime("%Y-%m-%d")}\n-------------------\ntimes: ', end="")
     for timecheck in t.get_timechecks(today):
-        for field in ["time_in", "time_out", "proposal_out"]:
-            dt = parse_time(timecheck[field], None)
-            if dt == None:
-                pass
-            elif field in ["proposal_out"]:
-                print(f'\033[93m{dt.strftime("%H:%M")}\033[0m ', end="")
-            elif dt is not None:
-                print(f'\033[92m{dt.strftime("%H:%M")}\033[0m ', end="")
+        if timecheck["proposal_in"]:
+            print(f"\033[93m", end="")
+        else:
+            print(f"\033[92m", end="")
+        print(timecheck["in"].strftime("%H:%M"), end="")
+        print("\033[0m-", end="")
+
+        if timecheck["out"]:
+            if timecheck["proposal_out"]:
+                print(f"\033[93m", end="")
+            else:
+                print(f"\033[92m", end="")
+            print(timecheck["out"].strftime("%H:%M"), end="")
+            print("\033[0m ", end="")
+        else:
+            print("… ", end="")
+
     worktime = t.get_worktime(today).total_seconds() // 60
     missing = 8 * 60 - worktime
     if missing < 0:
@@ -158,16 +158,16 @@ if __name__ == "__main__":
         first_time_out = 0
         timecheck = None
         for timecheck in t.get_timechecks(today):
-            time_in = parse_time(timecheck["time_in"])
-            time_out = parse_time(timecheck["time_out"], datetime.datetime.now())
+            time_in = timecheck["in"]
+            time_out = timecheck["out"] or datetime.datetime.now()
             nb_time_in += 1
 
             # we take the time_out as an int to calculate it
             if timecheck["time_out"] != None and first_time_out == 0:
-                first_time_out = 10000*datetime.datetime.strptime(timecheck["time_out"], "%Y-%m-%d %H:%M:%S").hour + 100*datetime.datetime.strptime(timecheck["time_out"], "%Y-%m-%d %H:%M:%S").minute
+                first_time_out = 10000*timecheck["out"].hour + 100*timecheck["out"].minute
         if timecheck is not None:
             # we take the time_in as an int to calculate it
-            second_time_in = 10000*datetime.datetime.strptime(timecheck["time_in"], "%Y-%m-%d %H:%M:%S").hour + 100*datetime.datetime.strptime(timecheck["time_in"], "%Y-%m-%d %H:%M:%S").minute
+            second_time_in = 10000*timecheck["in"].hour + 100*timecheck["in"].minute
             # we remove 30mins if we did not make the break
             if nb_time_in == 1:
                 missing += 30
