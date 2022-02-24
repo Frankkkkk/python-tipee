@@ -140,9 +140,9 @@ if __name__ == "__main__":
             else:
                 print(f"\033[92m", end="")
             print(timecheck["out"].strftime("%H:%M"), end="")
-            print("\033[0m", end="")
+            print("\033[0m ", end="")
         else:
-            print("…", end="")
+            print("… ", end="")
 
     worktime = t.get_worktime(today).total_seconds() // 60
     missing = 8 * 60 - worktime
