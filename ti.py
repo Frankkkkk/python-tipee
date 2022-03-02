@@ -50,6 +50,10 @@ class Tipee:
         self.id = r.json()["id"]
         address_user = r.json()["address"]
         city_user = r.json()["city"]
+        if address_user == None :
+            address_user = os.getenv("TIPEE_TO")
+            city_user = address_user.split(',')[0]
+
         return address_user, city_user
 
     def get_timechecks(self, day=None):

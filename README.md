@@ -92,6 +92,7 @@ You need the following env variables set:
 - TIPEE_USERNAME (foo-bar)
 - TIPEE_PASSWORD (secretz)
 - TIPEE_FROM (City, street)
+- TIPEE_TO (City, street)
 
 You can put them in the `.env` file (renaming the `.env.example`).
 
