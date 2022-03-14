@@ -27,6 +27,7 @@ class CustomFormatter(
 ):
     pass
 
+nb_hours_per_day = 8
 
 def parse_time(str_time: str, default=None):
     if not str_time or str_time == "":
@@ -186,7 +187,7 @@ def print_end_of_the_day(missing):
         current_time = datetime.datetime.now()
         time_end_day = str(current_time + datetime.timedelta(minutes=missing))
         hour_end_day = "{:%Hh%Mm}".format(datetime.datetime.strptime(time_end_day, "%Y-%m-%d %H:%M:%S.%f"))
-        if (worktime / 60) < 8:
+        if (worktime / 60) < nb_hours_per_day:
             print(f"End of the day at: \033[1;93m{hour_end_day}\033[0m 🏃💨")
         else:
             print(f"End of the day at: \033[1;91mNOW GO GO GO\033[0m 🏃💨")
@@ -196,11 +197,9 @@ def print_footer():
 
     hours_balance = datetime.timedelta(hours=balances['hours']['total'])
     print(f"\nBalance of hours before today: {balances['hours']['total']:.1f}h", end="")
-    if abs(hours_balance) > datetime.timedelta(hours=10):
-        one_day = datetime.timedelta(hours=8)
-        print(f" ({hours_balance/one_day:.3} 8-hours days)")
-    else:
-        print()
+    one_day = datetime.timedelta(hours=nb_hours_per_day)
+    if abs(hours_balance) > one_day:
+        print(f" ({hours_balance/one_day:.3} {nb_hours_per_day}-hours days)")
 
     print(f"Balance of holidays before today: {balances['holidays']['remaining']}j")
 
@@ -239,7 +238,7 @@ if __name__ == "__main__":
     when_phrase = "today so far"
     if args.negative_days != 0:
         when_phrase = "that day"
-    missing = 8 * 60 - worktime
+    missing = nb_hours_per_day * 60 - worktime
     if missing < 0:
         missing = abs(missing)
         print(f"\nTotal worktime {when_phrase}: \033[1m{worktime // 60:.0f}h{worktime % 60:02.0f}m\033[0m ({missing // 60:.0f}h{missing % 60:02.0f}m over ⌛)")
