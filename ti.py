@@ -101,12 +101,27 @@ def parse_args(args=sys.argv[1:]):
         description=sys.modules[__name__].__doc__, formatter_class=CustomFormatter
     )
 
-    parser.add_argument("--no-departure", dest="show_departure", action="store_false", help="Don't show suggested departure time")
+    parser.add_argument("--no-departure", action="store_false", dest="show_departure", help="Don't show suggested departure time")
+    parser.add_argument("-d", "--day", action="store", dest="negative_days", type=int, default=0, help="Display times for a specific day")
     subparsers = parser.add_subparsers(help='Punch your time')
     parser_a = subparsers.add_parser('punch')
     parser_a.add_argument('--punch', default=True)
 
     return parser.parse_args(args)
+
+def print_header(today, negative_days):
+    date_hour_format = today.strftime("%Y-%m-%d")
+
+    if args.negative_days == 0:
+        date_hour_format = today.strftime("%Y-%m-%d %H:%M")
+
+    header = f"📅 {negative_days} DAYS AGO {date_hour_format}"
+    if negative_days == 0:
+        header = f"📅 TODAY {date_hour_format}"
+    elif negative_days == 1:
+        header = f"📅 YESTERDAY {date_hour_format}"
+
+    print(f"{header}\n" + "-" * (len(header) + 1))
 
 def print_end_of_the_day(missing):
     if args.show_departure:
@@ -172,12 +187,17 @@ if __name__ == "__main__":
     t.login(username, password)
 
     today = datetime.datetime.now()
+    if args.negative_days != 0:
+        delta_days = datetime.timedelta(args.negative_days)
+        today = today - delta_days
 
     if 'punch' in args:
         t.punch()
         print("The clock has been punched ! 🤜⏰")
 
-    print(f'📅 TODAY {today.strftime("%Y-%m-%d")}\n-------------------\ntimes: ', end="")
+    print_header(today, args.negative_days)
+    print(f"Times: ", end="")
+
     for timecheck in t.get_timechecks(today):
         if timecheck["proposal_in"]:
             print(f"\033[93m", end="")
@@ -197,14 +217,19 @@ if __name__ == "__main__":
             print("… ", end="")
 
     worktime = t.get_worktime(today).total_seconds() // 60
+
+    when_phrase = "today so far"
+    if args.negative_days != 0:
+        when_phrase = "that day"
     missing = 8 * 60 - worktime
     if missing < 0:
         missing = abs(missing)
-        print(f"\ntotal worktime today so far: \033[1m{worktime // 60:.0f}h{worktime % 60:02.0f}m\033[0m ({missing // 60:.0f}h{missing % 60:02.0f}m over ⌛)")
+        print(f"\ntotal worktime {when_phrase}: \033[1m{worktime // 60:.0f}h{worktime % 60:02.0f}m\033[0m ({missing // 60:.0f}h{missing % 60:02.0f}m over ⌛)")
     else:
-        print(f"\ntotal worktime today so far: \033[1m{worktime // 60:.0f}h{worktime % 60:02.0f}m\033[0m ({missing // 60:.0f}h{missing % 60:02.0f}m left ⏳)")
+        print(f"\ntotal worktime {when_phrase}: \033[1m{worktime // 60:.0f}h{worktime % 60:02.0f}m\033[0m ({missing // 60:.0f}h{missing % 60:02.0f}m left ⏳)")
 
-    print_end_of_the_day(missing)
-    print_footer()
+    if args.negative_days == 0:
+        print_end_of_the_day(missing)
+        print_footer()
 
 # vim: set ts=4 sw=4 et:
