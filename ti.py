@@ -108,6 +108,58 @@ def parse_args(args=sys.argv[1:]):
 
     return parser.parse_args(args)
 
+def print_end_of_the_day(missing):
+    if args.show_departure:
+        # We take the second time_in and the first time_out
+        nb_time_in = 0
+        first_time_out = 0
+        timecheck = None
+        for timecheck in t.get_timechecks(today):
+            time_in = timecheck["in"]
+            time_out = timecheck["out"] or datetime.datetime.now()
+            nb_time_in += 1
+
+            # we take the time_out as an int to calculate it
+            if timecheck["time_out"] != None and first_time_out == 0:
+                first_time_out = 10000*timecheck["out"].hour + 100*timecheck["out"].minute
+        if timecheck is not None:
+            # we take the time_in as an int to calculate it
+            second_time_in = 10000*timecheck["in"].hour + 100*timecheck["in"].minute
+            # we remove 30mins if we did not make the break
+            if nb_time_in == 1:
+                missing += 30
+            elif nb_time_in == 2:
+                diff = (second_time_in - first_time_out) / 100
+                if diff >= 30:
+                    pass
+                elif diff < 30:
+                    diff_pause = 30 - diff
+                    missing += diff_pause
+
+        current_time = datetime.datetime.now()
+        time_end_day = str(current_time + datetime.timedelta(minutes=missing))
+        hour_end_day = "{:%Hh%Mm}".format(datetime.datetime.strptime(time_end_day, "%Y-%m-%d %H:%M:%S.%f"))
+        if (worktime / 60) < 8:
+            print(f"End of the day at: \033[1m{hour_end_day}\033[0m 🏃💨")
+        else:
+            print(f"End of the day at: \033[1mNOW GO GO GO\033[0m 🏃💨")
+
+def print_footer():
+    balances = t.get_balances()
+    hours_balance = datetime.timedelta(hours=balances['hours']['total'])
+    print(f"\nbalance of hours before today: {balances['hours']['total']:.1f}h", end="")
+    if abs(hours_balance) > datetime.timedelta(hours=10):
+        one_day = datetime.timedelta(hours=8)
+        print(f" ({hours_balance/one_day:.2} 8-hour days)")
+    else:
+        print()
+
+    print(f"balance of holidays before today: {balances['holidays']['remaining']}j")
+
+    birthdays = [bd["first_name"] + " " + bd["last_name"] for bd in t.get_birthdays()]
+    if len(birthdays) > 0:
+        print(f'\n🎂 birthdays: {",".join(birthdays)}')
+
 
 if __name__ == "__main__":
     args = parse_args()
@@ -152,55 +204,7 @@ if __name__ == "__main__":
     else:
         print(f"\ntotal worktime today so far: \033[1m{worktime // 60:.0f}h{worktime % 60:02.0f}m\033[0m ({missing // 60:.0f}h{missing % 60:02.0f}m left ⏳)")
 
-    if args.show_departure:
-        # We take the second time_in and the first time_out
-        nb_time_in = 0
-        first_time_out = 0
-        timecheck = None
-        for timecheck in t.get_timechecks(today):
-            time_in = timecheck["in"]
-            time_out = timecheck["out"] or datetime.datetime.now()
-            nb_time_in += 1
-
-            # we take the time_out as an int to calculate it
-            if timecheck["time_out"] != None and first_time_out == 0:
-                first_time_out = 10000*timecheck["out"].hour + 100*timecheck["out"].minute
-        if timecheck is not None:
-            # we take the time_in as an int to calculate it
-            second_time_in = 10000*timecheck["in"].hour + 100*timecheck["in"].minute
-            # we remove 30mins if we did not make the break
-            if nb_time_in == 1:
-                missing += 30
-            elif nb_time_in == 2:
-                diff = (second_time_in - first_time_out) / 100
-                if diff >= 30:
-                    pass
-                elif diff < 30:
-                    diff_pause = 30 - diff
-                    missing += diff_pause
-
-        current_time = datetime.datetime.now()
-        time_end_day = str(current_time + datetime.timedelta(minutes=missing))
-        hour_end_day = "{:%Hh%Mm}".format(datetime.datetime.strptime(time_end_day, "%Y-%m-%d %H:%M:%S.%f"))
-        if (worktime / 60) < 8:
-            print(f"End of the day at: \033[1m{hour_end_day}\033[0m 🏃💨")
-        else:
-            print(f"End of the day at: \033[1mNOW GO GO GO\033[0m 🏃💨")
-
-
-    balances = t.get_balances()
-    hours_balance = datetime.timedelta(hours=balances['hours']['total'])
-    print(f"\nbalance of hours before today: {balances['hours']['total']:.1f}h", end="")
-    if abs(hours_balance) > datetime.timedelta(hours=10):
-        one_day = datetime.timedelta(hours=8)
-        print(f" ({hours_balance/one_day:.2} 8-hour days)")
-    else:
-        print()
-
-    print(f"balance of holidays before today: {balances['holidays']['remaining']}j")
-
-    birthdays = [bd["first_name"] + " " + bd["last_name"] for bd in t.get_birthdays()]
-    if len(birthdays) > 0:
-        print(f'\n🎂 birthdays: {",".join(birthdays)}')
+    print_end_of_the_day(missing)
+    print_footer()
 
 # vim: set ts=4 sw=4 et:
