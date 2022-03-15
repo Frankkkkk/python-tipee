@@ -27,6 +27,7 @@ class CustomFormatter(
 ):
     pass
 
+nb_hours_per_day = 8
 
 def parse_time(str_time: str, default=None):
     if not str_time or str_time == "":
@@ -51,7 +52,7 @@ class Tipee:
         else:
             r = self.session.get(self.instance + url)
         r.raise_for_status()
-        if r.text.strip():  # tipee likes to reply with a single empty line
+        if r.text.strip():  # Tipee likes to reply with a single empty line
             self._cache[url] = r.json()
             return self._cache[url]
 
@@ -166,13 +167,13 @@ def print_end_of_the_day(missing):
             time_out = timecheck["out"] or datetime.datetime.now()
             nb_time_in += 1
 
-            # we take the time_out as an int to calculate it
+            # We take the time_out as an int to calculate it
             if timecheck["time_out"] != None and first_time_out == 0:
                 first_time_out = 10000*timecheck["out"].hour + 100*timecheck["out"].minute
         if timecheck is not None:
-            # we take the time_in as an int to calculate it
+            # We take the time_in as an int to calculate it
             second_time_in = 10000*timecheck["in"].hour + 100*timecheck["in"].minute
-            # we remove 30mins if we did not make the break
+            # We remove 30mins if we did not make the break
             if nb_time_in == 1:
                 missing += 30
             elif nb_time_in == 2:
@@ -186,26 +187,25 @@ def print_end_of_the_day(missing):
         current_time = datetime.datetime.now()
         time_end_day = str(current_time + datetime.timedelta(minutes=missing))
         hour_end_day = "{:%Hh%Mm}".format(datetime.datetime.strptime(time_end_day, "%Y-%m-%d %H:%M:%S.%f"))
-        if (worktime / 60) < 8:
+        if (worktime / 60) < nb_hours_per_day:
             print(f"End of the day at: \033[1;93m{hour_end_day}\033[0m 🏃💨")
         else:
             print(f"End of the day at: \033[1;91mNOW GO GO GO\033[0m 🏃💨")
 
 def print_footer():
     balances = t.get_balances()
-    hours_balance = datetime.timedelta(hours=balances['hours']['total'])
-    print(f"\nbalance of hours before today: {balances['hours']['total']:.1f}h", end="")
-    if abs(hours_balance) > datetime.timedelta(hours=10):
-        one_day = datetime.timedelta(hours=8)
-        print(f" ({hours_balance/one_day:.2} 8-hour days)")
-    else:
-        print()
 
-    print(f"balance of holidays before today: {balances['holidays']['remaining']}j")
+    hours_balance = datetime.timedelta(hours=balances['hours']['total'])
+    print(f"\nBalance of hours before today: {balances['hours']['total']:.1f}h", end="")
+    one_day = datetime.timedelta(hours=nb_hours_per_day)
+    if abs(hours_balance) > one_day:
+        print(f" ({hours_balance/one_day:.3} {nb_hours_per_day}-hours days)")
+
+    print(f"Balance of holidays before today: {balances['holidays']['remaining']}j")
 
     birthdays = [bd["first_name"] + " " + bd["last_name"] for bd in t.get_birthdays()]
     if len(birthdays) > 0:
-        print(f'\n🎂 birthdays: {",".join(birthdays)}')
+        print(f'\n🎂 Birthdays: {",".join(birthdays)}')
 
 
 if __name__ == "__main__":
@@ -223,9 +223,11 @@ if __name__ == "__main__":
         delta_days = datetime.timedelta(args.negative_days)
         today = today - delta_days
 
+    print()
+
     if 'punch' in args:
         t.punch()
-        print("The clock has been punched ! 🤜⏰")
+        print("The clock has been punched! 🤜⏰\n")
 
     print_header(today, args.negative_days)
 
@@ -236,15 +238,17 @@ if __name__ == "__main__":
     when_phrase = "today so far"
     if args.negative_days != 0:
         when_phrase = "that day"
-    missing = 8 * 60 - worktime
+    missing = nb_hours_per_day * 60 - worktime
     if missing < 0:
         missing = abs(missing)
-        print(f"\ntotal worktime {when_phrase}: \033[1m{worktime // 60:.0f}h{worktime % 60:02.0f}m\033[0m ({missing // 60:.0f}h{missing % 60:02.0f}m over ⌛)")
+        print(f"\nTotal worktime {when_phrase}: \033[1m{worktime // 60:.0f}h{worktime % 60:02.0f}m\033[0m ({missing // 60:.0f}h{missing % 60:02.0f}m over ⌛)")
     else:
-        print(f"\ntotal worktime {when_phrase}: \033[1m{worktime // 60:.0f}h{worktime % 60:02.0f}m\033[0m ({missing // 60:.0f}h{missing % 60:02.0f}m left ⏳)")
+        print(f"\nTotal worktime {when_phrase}: \033[1m{worktime // 60:.0f}h{worktime % 60:02.0f}m\033[0m ({missing // 60:.0f}h{missing % 60:02.0f}m left ⏳)")
 
     if args.negative_days == 0:
         print_end_of_the_day(missing)
         print_footer()
+
+    print()
 
 # vim: set ts=4 sw=4 et:
