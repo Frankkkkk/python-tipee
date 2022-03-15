@@ -6,6 +6,15 @@ Description:
 Display info about tipee timings
 frank.villaro@infomaniak.com - DO WHAT THE FUCK YOU WANT TO PUBLIC LICENSE, etc.
 """
+
+# GREEN = 92
+# YELLOW = 93
+# RED = 91
+# BOLD = 1
+# ITALIC = 3
+# RESET = 0
+# Example for green & italic text: `\033[92;3mTEXT\033[0m`
+
 import datetime
 import os
 import sys
@@ -62,8 +71,8 @@ class Tipee:
         data = self._request(f"api/employees/{self.id}/workday?date={str_day}")
 
         for timecheck in data.get("timechecks", []):
-            timecheck["in"] = parse_time(timecheck["proposal_in"] or timecheck["time_in"])
-            timecheck["out"] = parse_time(timecheck["proposal_out"] or timecheck["time_out"])
+            timecheck["in"] = parse_time(timecheck["validation_in"] or timecheck["time_in"])
+            timecheck["out"] = parse_time(timecheck["validation_out"] or timecheck["time_out"])
             yield timecheck
 
     def get_balances(self, day=None):
@@ -122,6 +131,29 @@ def print_header(today, negative_days):
         header = f"📅 YESTERDAY {date_hour_format}"
 
     print(f"{header}\n" + "-" * (len(header) + 1))
+
+def print_times():
+
+    print(f'Times: ', end='')
+
+    for timecheck in t.get_timechecks(today):
+
+        if timecheck["validation_in"] and (timecheck["validation_in"] != timecheck["time_in"]):
+            print(f"\033[91m", end='')
+        else:
+            print(f"\033[92m", end='')
+        print(f'{timecheck["in"].strftime("%H:%M")}\033[0m-', end='')
+
+        if timecheck["out"]:
+            if timecheck["validation_out"] and (timecheck["validation_out"] != timecheck["time_out"]):
+                print(f"\033[91m", end='')
+            else:
+                print(f"\033[93m", end='')
+            print(f'{timecheck["out"].strftime("%H:%M")}\033[0m', end='')
+        else:
+            print('…', end='')
+
+        print(' ', end='')
 
 def print_end_of_the_day(missing):
     if args.show_departure:
@@ -196,25 +228,8 @@ if __name__ == "__main__":
         print("The clock has been punched ! 🤜⏰")
 
     print_header(today, args.negative_days)
-    print(f"Times: ", end="")
 
-    for timecheck in t.get_timechecks(today):
-        if timecheck["proposal_in"]:
-            print(f"\033[93m", end="")
-        else:
-            print(f"\033[92m", end="")
-        print(timecheck["in"].strftime("%H:%M"), end="")
-        print("\033[0m-", end="")
-
-        if timecheck["out"]:
-            if timecheck["proposal_out"]:
-                print(f"\033[93m", end="")
-            else:
-                print(f"\033[92m", end="")
-            print(timecheck["out"].strftime("%H:%M"), end="")
-            print("\033[0m ", end="")
-        else:
-            print("… ", end="")
+    print_times()
 
     worktime = t.get_worktime(today).total_seconds() // 60
 
