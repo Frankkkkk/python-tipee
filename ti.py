@@ -155,9 +155,9 @@ def print_end_of_the_day(missing):
         time_end_day = str(current_time + datetime.timedelta(minutes=missing))
         hour_end_day = "{:%Hh%Mm}".format(datetime.datetime.strptime(time_end_day, "%Y-%m-%d %H:%M:%S.%f"))
         if (worktime / 60) < 8:
-            print(f"End of the day at: \033[1m{hour_end_day}\033[0m 🏃💨")
+            print(f"End of the day at: \033[1;93m{hour_end_day}\033[0m 🏃💨")
         else:
-            print(f"End of the day at: \033[1mNOW GO GO GO\033[0m 🏃💨")
+            print(f"End of the day at: \033[1;91mNOW GO GO GO\033[0m 🏃💨")
 
 def print_footer():
     balances = t.get_balances()
