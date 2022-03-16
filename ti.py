@@ -244,11 +244,12 @@ if __name__ == "__main__":
     if args.negative_days != 0:
         when_phrase = "that day"
     missing = nb_hours_per_day * 60 - worktime
+    print(f"\nTotal worktime {when_phrase}: \033[1m{worktime // 60:.0f}h{worktime % 60:02.0f}m\033[0m", end="")
     if missing < 0:
         missing = abs(missing)
-        print(f"\nTotal worktime {when_phrase}: \033[1m{worktime // 60:.0f}h{worktime % 60:02.0f}m\033[0m ({missing // 60:.0f}h{missing % 60:02.0f}m over ⌛)")
+        print(f" \033[3m({missing // 60:.0f}h{missing % 60:02.0f}m over\033[0m ⌛\033[3m)\033[0m")
     else:
-        print(f"\nTotal worktime {when_phrase}: \033[1m{worktime // 60:.0f}h{worktime % 60:02.0f}m\033[0m ({missing // 60:.0f}h{missing % 60:02.0f}m left ⏳)")
+        print(f" \033[3m({missing // 60:.0f}h{missing % 60:02.0f}m left\033[0m ⏳\033[3m)\033[0m")
 
     if args.negative_days == 0:
         print_end_of_the_day(missing)
