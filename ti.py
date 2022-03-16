@@ -196,10 +196,15 @@ def print_footer():
     balances = t.get_balances()
 
     hours_balance = datetime.timedelta(hours=balances['hours']['total'])
-    print(f"\nBalance of hours before today: {balances['hours']['total']:.1f}h", end="")
+    hours = int(balances['hours']['total'])
+    minutes = balances['hours']['total'] % 1 * 60
+    color = '92'
+    if hours < 0:
+        color = '91'
+    print(f"\nBalance of hours before today: \033[{color}m{hours}h{minutes:02.0f}m\033[0m", end="")
     one_day = datetime.timedelta(hours=nb_hours_per_day)
     if abs(hours_balance) > one_day:
-        print(f" ({hours_balance/one_day:.3} {nb_hours_per_day}-hours days)")
+        print(f" \033[3m(\033[{color}m{hours_balance/one_day:.3}\033[0m \033[3m{nb_hours_per_day}-hours days)\033[0m")
 
     print(f"Balance of holidays before today: {balances['holidays']['remaining']}j")
 
