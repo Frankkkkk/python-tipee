@@ -206,7 +206,11 @@ def print_footer():
     if abs(hours_balance) > one_day:
         print(f" \033[3m(\033[{color}m{hours_balance/one_day:.3}\033[0m \033[3m{nb_hours_per_day}-hours days)\033[0m")
 
-    print(f"Balance of holidays before today: {balances['holidays']['remaining']}j")
+    holidays = balances['holidays']['remaining']
+    color = '92'
+    if holidays <= 0:
+        color = '93'
+    print(f"Balance of holidays before today: \033[{color}m{holidays}j\033[0m")
 
     birthdays = [bd["first_name"] + " " + bd["last_name"] for bd in t.get_birthdays()]
     if len(birthdays) > 0:
