@@ -72,8 +72,8 @@ class Tipee:
         data = self._request(f"api/employees/{self.id}/workday?date={str_day}")
 
         for timecheck in data.get("timechecks", []):
-            timecheck["in"] = parse_time(timecheck["validation_in"] or timecheck["time_in"])
-            timecheck["out"] = parse_time(timecheck["validation_out"] or timecheck["time_out"])
+            timecheck["in"] = parse_time(timecheck["validation_in"] or timecheck["time_in"] or timecheck["proposal_in"])
+            timecheck["out"] = parse_time(timecheck["validation_out"] or timecheck["time_out"] or timecheck["proposal_out"])
             yield timecheck
 
     def get_balances(self, day=None):
