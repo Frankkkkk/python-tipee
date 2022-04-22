@@ -194,10 +194,10 @@ def parse_args(args=sys.argv[1:]):
     )
 
     parser.add_argument('-p', '--punch', action='store_true', help="punch your time on Tipee")
+    parser.add_argument('-hi', '--history', action='store_true', help="Displays the punch of the last 7 days")
     parser.add_argument('-d', '--no-departure', dest="no_departure", action='store_true', help="don't show you what time you can leave")
     parser.add_argument('-w', '--weather', action='store_true', help="show the current weather")
     parser.add_argument('-r', '--route', action='store_true', help="show your route with pulic transport")
-    parser.add_argument('-t', '--timechecks', '--history', action='store_true', help="Displays the punch of the last 7 days")
 
     args = parser.parse_args()
     return args
@@ -217,7 +217,7 @@ if __name__ == "__main__":
 
     today = datetime.datetime.now()
 
-    if args.timechecks:
+    if args.history:
         for i in reversed(range(7)):
             day = datetime.date.today() - datetime.timedelta(days=i)
             print(f"{day} : ", end="")
