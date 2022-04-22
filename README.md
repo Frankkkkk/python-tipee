@@ -61,6 +61,26 @@ Weather report: geneva
 (...)
 ```
 
+## Get the history of your last 7 days of time checks
+We can show you your history of punch by typing :
+```
+./ti.py --history
+
+2022-04-16 : No timechecks for this day
+
+2022-04-17 : No timechecks for this day
+
+2022-04-18 : 09:01 11:33 12:19 17:51
+
+2022-04-19 : 08:49 11:50 12:20 17:31
+
+2022-04-20 : 09:01 11:33 12:19 17:51
+
+2022-04-21 : 08:49 11:58 12:21 17:25
+
+2022-04-22 : 07:29 11:45 14:13 17:25
+```
+
 ## Have your journey from work to home
 We also show you the public transport route from your work to your home! You just have to fill in the environment variable `TIPEE_FROM` so that we can know in which city and street you work. <br>
 Works with all cities and streets in Switzerland, but only works with some cities and streets around Switzerland.
