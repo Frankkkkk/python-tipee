@@ -69,6 +69,17 @@ class Tipee:
         js = r.json()
         return js.get("timechecks", [])
 
+    def print_timechecks(timechecks):
+        for timecheck in timechecks:
+            for field in ["time_in", "time_out", "proposal_in", "proposal_out"]:
+                dt = parse_time(timecheck[field], None)
+                if dt == None:
+                    pass
+                elif field in ["proposal_out"] or field in ["proposal_in"]:
+                    print(f'\033[93m{dt.strftime("%H:%M")}\033[0m ', end="")
+                elif dt is not None:
+                    print(f'\033[92m{dt.strftime("%H:%M")}\033[0m ', end="")
+
     def get_balances(self, day=None):
         if not day:
             day = datetime.datetime.today() - datetime.timedelta(days=1)
@@ -186,6 +197,7 @@ def parse_args(args=sys.argv[1:]):
     parser.add_argument('-d', '--no-departure', dest="no_departure", action='store_true', help="don't show you what time you can leave")
     parser.add_argument('-w', '--weather', action='store_true', help="show the current weather")
     parser.add_argument('-r', '--route', action='store_true', help="show your route with pulic transport")
+    parser.add_argument('-t', '--timechecks', '--history', action='store_true', help="Displays the punch of the last 7 days")
 
     args = parser.parse_args()
     return args
@@ -205,20 +217,24 @@ if __name__ == "__main__":
 
     today = datetime.datetime.now()
 
+    if args.timechecks:
+        for i in reversed(range(7)):
+            day = datetime.date.today() - datetime.timedelta(days=i)
+            print(f"{day} : ", end="")
+            time_checks = t.get_timechecks(day)
+            if time_checks != []:
+                Tipee.print_timechecks(time_checks)
+            else:
+                print("\033[31mNo timechecks for this day\033[0m", end="")  
+            print("\n")
+        exit(1)
+
     if args.punch:
         t.punch()
         print("The clock has been punched ! 🤜⏰")
 
     print(f'📅 TODAY {today.strftime("%Y-%m-%d")}\n-------------------\ntimes: ', end="")
-    for timecheck in t.get_timechecks(today):
-        for field in ["time_in", "time_out", "proposal_in", "proposal_out"]:
-            dt = parse_time(timecheck[field], None)
-            if dt == None:
-                pass
-            elif field in ["proposal_out"] or field in ["proposal_in"]:
-                print(f'\033[93m{dt.strftime("%H:%M")}\033[0m ', end="")
-            elif dt is not None:
-                print(f'\033[92m{dt.strftime("%H:%M")}\033[0m ', end="")
+    Tipee.print_timechecks(t.get_timechecks(today))
     worktime = t.get_worktime(today).total_seconds() // 60
     missing = 8 * 60 - worktime
     if missing < 0:
