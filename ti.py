@@ -21,6 +21,7 @@ import sys
 import argparse
 
 import requests
+import re
 
 class CustomFormatter(
     argparse.RawDescriptionHelpFormatter, argparse.ArgumentDefaultsHelpFormatter
@@ -57,10 +58,21 @@ class Tipee:
             return self._cache[url]
 
     def login(self, username: str, password: str):
-        self._request("api/sign-in", payload = {
-            "username": username,
-            "password": password,
-        })
+        # first we get the CSRF TOKEN
+        r = self.session.get(self.instance + "auth/login")
+        match = re.search('name="_csrf_token" value="(?P<token>[^"]+)"', r.text)
+        if match:
+            csrf_token = match.group('token')
+        else:
+            raise ValueError("Cannot login")
+        # then we simulate the login
+        payload = {
+            "_username": username,
+            "_password": password,
+            "_csrf_token": csrf_token,
+        }
+        self.session.post(self.instance + "auth/login", data=payload)
+        # and we get our id
         self.id = self._request("brain/users/me")["id"]
 
     def get_timechecks(self, day=None):
@@ -210,7 +222,7 @@ def print_footer():
     color = '92'
     if holidays <= 0:
         color = '93'
-    print(f"Balance of holidays before today: \033[{color}m{holidays}j\033[0m")
+    print(f"\nBalance of holidays before today: \033[{color}m{holidays}j\033[0m")
 
     birthdays = [bd["first_name"] + " " + bd["last_name"] for bd in t.get_birthdays()]
     if len(birthdays) > 0:
