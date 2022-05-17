@@ -222,7 +222,7 @@ def print_footer():
     color = '92'
     if holidays <= 0:
         color = '93'
-    print(f"Balance of holidays before today: \033[{color}m{holidays}j\033[0m")
+    print(f"\nBalance of holidays before today: \033[{color}m{holidays}j\033[0m")
 
     birthdays = [bd["first_name"] + " " + bd["last_name"] for bd in t.get_birthdays()]
     if len(birthdays) > 0:
