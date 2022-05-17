@@ -21,6 +21,7 @@ import sys
 import argparse
 
 import requests
+import re
 
 class CustomFormatter(
     argparse.RawDescriptionHelpFormatter, argparse.ArgumentDefaultsHelpFormatter
@@ -57,10 +58,21 @@ class Tipee:
             return self._cache[url]
 
     def login(self, username: str, password: str):
-        self._request("api/sign-in", payload = {
-            "username": username,
-            "password": password,
-        })
+        # first we get the CSRF TOKEN
+        r = self.session.get(self.instance + "auth/login")
+        match = re.search('name="_csrf_token" value="(?P<token>[^"]+)"', r.text)
+        if match:
+            csrf_token = match.group('token')
+        else:
+            raise ValueError("Cannot login")
+        # then we simulate the login
+        payload = {
+            "_username": username,
+            "_password": password,
+            "_csrf_token": csrf_token,
+        }
+        self.session.post(self.instance + "auth/login", data=payload)
+        # and we get our id
         self.id = self._request("brain/users/me")["id"]
 
     def get_timechecks(self, day=None):
