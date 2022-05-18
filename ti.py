@@ -11,7 +11,7 @@ import datetime
 import os
 import sys
 import argparse
-
+import re
 import requests
 
 class CustomFormatter(
@@ -34,12 +34,21 @@ class Tipee:
         self.session = requests.Session()
 
     def login(self, username: str, password: str):
-        url = self.instance + "api/sign-in"
+        # first we get the CSRF TOKEN
+        r = self.session.get(self.instance + "auth/login")
+        match = re.search('name="_csrf_token" value="(?P<token>[^"]+)"', r.text)
+        if match:
+            csrf_token = match.group('token')
+        else:
+            raise ValueError("Cannot login")
+        # then we simulate the login
+
         payload = {
-            "username": username,
-            "password": password,
+            "_username": username,
+            "_password": password,
+            "_csrf_token": csrf_token,
         }
-        r = self.session.post(url, json=payload)
+        self.session.post(self.instance + "auth/login", data=payload)
         r.raise_for_status()
 
         self._get_me()
@@ -52,7 +61,8 @@ class Tipee:
         city_user = r.json()["city"]
         if address_user == None :
             address_user = os.getenv("TIPEE_TO")
-            city_user = address_user.split(',')[0]
+            if address_user != None:
+                city_user = address_user.split(',')[0]
 
         return address_user, city_user
 
