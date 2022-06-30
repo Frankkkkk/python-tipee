@@ -94,9 +94,10 @@ class Tipee:
         if not day:
             day = datetime.datetime.today() - datetime.timedelta(days=1)
 
-        str_day = day.strftime("%Y-%m-%d")
+        str_day_start = "2005-01-01"
+        str_day_end = day.strftime("%Y-%m-%d")
 
-        url = self.instance + f"brain/plannings/soldes?day_end={str_day}"
+        url = self.instance + f"brain/plannings/soldes?day_start={str_day_start}&day_end={str_day_end}"
 
         r = self.session.get(url)
         r.raise_for_status()
